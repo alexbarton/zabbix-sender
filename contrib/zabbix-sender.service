@@ -1,0 +1,19 @@
+[Unit]
+Description=Process Zabbix send queue
+ConditionFileIsExecutable=/usr/local/sbin/zabbix-sender
+ConditionPathIsDirectory=/var/spool/zabbix/zabbix_sender.d
+
+[Service]
+Type=oneshot
+WorkingDirectory=/var/spool/zabbix/zabbix_sender.d
+ExecStart=/usr/local/sbin/zabbix-sender
+
+Nice=15
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectControlGroups=true
+ProtectHome=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ProtectSystem=full

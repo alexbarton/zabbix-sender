@@ -1,0 +1,41 @@
+#!/bin/bash
+
+set -eu -o pipefail
+
+CONFIG_FILE="/etc/zabbix/zabbix_agent2.d/barton.de.conf"
+
+send_file() {
+	(
+		set +e
+		zabbix_sender --config "${CONFIG_FILE}" --input-file "$1" --with-timestamps
+		exit_code=$?
+		if [[ ${exit_code} -ne 0 && ${exit_code} -ne 2 ]]; then
+			echo "Oops, zabbix_send(1) returned error code ${exit_code}!" >&2
+			exit ${exit_code}
+		fi
+	)
+	# Delete sent spool file.
+	rm "$1"
+}
+
+handle_spoolfile() {
+	echo "Processing \"$1\" ..."
+	sending_file="$1.sending"
+	if [[ -e "$sending_file" ]]; then
+		echo "Oops, \"$sending_file\" already exists! Trying to send this first ..."
+		send_file "$sending_file"
+	fi
+
+	# Move spool file to "sending" state and send it:
+	mv "$1" "$sending_file"
+	send_file "$sending_file"
+}
+
+# Iterator over all readable spool files:
+for file in /var/spool/zabbix/zabbix_sender.d/*.spool; do
+	if [[ -r "${file}" ]]; then
+		handle_spoolfile "${file}"
+	elif [[ -e "${file}" ]]; then
+		echo "Can't read \"${file}\"! Skipped." >&2
+	fi
+done
