@@ -2,7 +2,7 @@
 
 set -eu -o pipefail
 
-CONFIG_FILE="/etc/zabbix/zabbix_agent2.d/barton.de.conf"
+CONFIG_FILE="/etc/zabbix/zabbix_agent2.d/zabbix_agent2.conf"
 
 send_file() {
 	(
